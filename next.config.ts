@@ -1,7 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_WS_STREAM_URL: process.env.NEXT_PUBLIC_WS_STREAM_URL,
+    NEXT_PUBLIC_WS_VIEWER_URL: process.env.NEXT_PUBLIC_WS_VIEWER_URL,
+    NEXT_PUBLIC_BUSKER_ACCESS_TOKEN: process.env.NEXT_PUBLIC_BUSKER_ACCESS_TOKEN,
+    NEXT_PUBLIC_USER_ACCESS_TOKEN: process.env.NEXT_PUBLIC_USER_ACCESS_TOKEN,
+    NEXT_PUBLIC_BUSKER_UUID: process.env.NEXT_PUBLIC_BUSKER_UUID,
+    NEXT_PUBLIC_USER_UUID: process.env.NEXT_PUBLIC_USER_UUID,
+    NEXT_PUBLIC_HLS_BASE_URL: process.env.NEXT_PUBLIC_HLS_BASE_URL,
+    NEXT_PUBLIC_LIVE_API_URL: process.env.NEXT_PUBLIC_LIVE_API_URL,
+  },
 };
 
 export default nextConfig;
