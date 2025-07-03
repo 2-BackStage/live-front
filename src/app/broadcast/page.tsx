@@ -64,9 +64,21 @@ export default function StartStreamingPage() {
         console.error('❌ WebSocket 연결 에러:', error);
       };
       
-      const mediaRecorder = new MediaRecorder(mediaStream, {
-        mimeType: "video/webm;codecs=vp8,opus",
-      });
+      let mediaRecorder: MediaRecorder | null = null;
+      const mimeTypeOptions = [
+        "video/webm;codecs=vp8",
+        "video/webm;codecs=vp9",
+        "video/webm"
+      ];
+      for (const mimeType of mimeTypeOptions) {
+        if (MediaRecorder.isTypeSupported(mimeType)) {
+          mediaRecorder = new MediaRecorder(mediaStream, { mimeType });
+          break;
+        }
+      }
+      if (!mediaRecorder) {
+        mediaRecorder = new MediaRecorder(mediaStream); // fallback
+      }
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.ondataavailable = async (event) => {
         if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
@@ -75,14 +87,8 @@ export default function StartStreamingPage() {
           processQueue(ws);
         }
       };
-      mediaRecorder.onstop = async () => {
-        ws.close();
-        setSocket(null);
-        setIsStreaming(false);
-        if (currentStreamKey) {
-          await stopLive({ streamKey: currentStreamKey }, buskerUuid, buskerAccessToken);
-        }
-        router.push(`/view/${streamKey}?host=true`);
+      mediaRecorder.onstop = () => {
+        console.log("🎥 MediaRecorder 정지됨");
       };
       mediaRecorder.start(1000);
       setIsStreaming(true);
@@ -95,7 +101,28 @@ export default function StartStreamingPage() {
     }
   };
 
-  const endStreaming = () => mediaRecorderRef.current?.stop();
+  const endStreaming = async () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+
+    if (currentStreamKey && buskerUuid && buskerAccessToken) {
+      try {
+        await stopLive({ streamKey: currentStreamKey }, buskerUuid, buskerAccessToken);
+        console.log("✅ 방송 종료 API 호출 완료");
+      } catch (err) {
+        console.error("❌ 방송 종료 API 호출 실패:", err);
+      }
+    }
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.close();
+    }
+
+    setSocket(null);
+    setIsStreaming(false);
+    router.push(`/view/${currentStreamKey}?host=true`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center p-4">
